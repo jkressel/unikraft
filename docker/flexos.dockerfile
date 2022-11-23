@@ -35,7 +35,7 @@ RUN pip3 install -U setuptools==41.0
 
 WORKDIR /root
 
-RUN git clone https://github.com/project-flexos/kraft.git
+RUN git clone https://github.com/jkressel/kraft.git
 
 WORKDIR /root/kraft
 

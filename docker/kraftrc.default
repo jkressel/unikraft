@@ -23,6 +23,6 @@ origins = [
   "https://github.com/project-flexos/app-redis.git",
   "https://github.com/project-flexos/lib-iperf.git",
   "https://github.com/project-flexos/app-iperf.git",
-  "https://github.com/project-flexos/unikraft.git",
+  "https://github.com/jkressel/unikraft.git",
   "https://github.com/project-flexos/lib-pthread-embedded.git"
 ]

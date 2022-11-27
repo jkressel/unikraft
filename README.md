@@ -265,6 +265,9 @@ $ kraft run [...] # run
 ### Morello
 
 #### Building instructions
+
+**NOTE** You must use a debian 11+ environment for building FlexOS as opposed to the debian 10 environenment set up for regular builds
+
 1. You will need the morello bare metal llvm toolchain: https://git.morello-project.org/morello/llvm-project-releases/-/tree/morello/baremetal-release-1.5
 2. Download the arm gcc toolchain: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 3. Add the following to `<PATH TO UNIKRAFT>/.unikraft/unikraft/Makefile`:

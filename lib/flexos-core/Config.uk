@@ -26,6 +26,8 @@ endif # LIBFLEXOS_VMEPT
 
 config LIBFLEXOS_NONE
 	bool "Function call gate instanciations (debugging)"
+config LIBFLEXOS_MORELLO
+	bool "Using the Morello backend for isolation."
 endchoice
 
 if LIBFLEXOS_INTELPKU

@@ -103,7 +103,9 @@ struct thread_main_arg {
  *
  * for compartment 1.
  */
-/* __FLEXOS MARKER__: insert compartment sections decls here. */
+extern char _comp1[], _ecomp1[], _bss_comp1[], _ebss_comp1[];
+extern char flexos_comp0_alloc[];
+
 
 extern struct uk_alloc *flexos_shared_alloc;
 
@@ -364,7 +366,11 @@ do {									\
 #endif /* CONFIG_DYNAMIC_PT */
 
 #if CONFIG_LIBUKBOOT_INITBBUDDY
+#if CONFIG_LIBFLEXOS_MORELLO
+			a = uk_allocbbuddy_init(flexos_comp0_alloc, 1000 * __PAGE_SIZE);
+#else
 			a = uk_allocbbuddy_init(md.base, md.len);
+#endif
 #elif CONFIG_LIBUKBOOT_INITREGION
 			a = uk_allocregion_init(md.base, md.len);
 #elif CONFIG_LIBUKBOOT_INITTLSF
@@ -405,7 +411,7 @@ do {									\
 				      (void *) __SHARED_END);
 #if CONFIG_LIBVFSCORE
 	/* vfscore's compartment: we should rather pass this via a macro */
-	PROTECT_SECTION("ukfslist", /* __FLEXOS MARKER__: vfscore compartment */,
+	PROTECT_SECTION("ukfslist", 0,
 			(void *) &uk_fslist_start, (void *) &uk_fslist_end);
 
 #if CONFIG_LIBCPIO
@@ -415,7 +421,7 @@ do {									\
 	initrd = ukplat_memregion_find_initrd0(&memregion_desc);
 	if (initrd != -1) {
 		ukplat_memregion_get(initrd, &memregion_desc);
-		PROTECT_SECTION("initrd", /* __FLEXOS MARKER__: vfscore compartment */,
+		PROTECT_SECTION("initrd", 0,
 			(void *) memregion_desc.base,
 			(void *) round_pgup((size_t) memregion_desc.base + memregion_desc.len));
 	}
@@ -426,7 +432,12 @@ do {									\
 	ASSIGN_HEAP("shared", 15 /* key */, 1000 /* size */, flexos_shared_alloc);
 
 	/* The toolchain will insert section initializers here. */
-	/* __FLEXOS MARKER__: insert compartment sections initializers here. */
+		PROTECT_SECTION("data_comp1", 1, (void *) __uk_image_symbol(_comp1),
+					 (void *) __uk_image_symbol(_ecomp1));
+	PROTECT_SECTION("bss_comp1", 1, (void *) __uk_image_symbol(_bss_comp1),
+					(void *) __uk_image_symbol(_ebss_comp1));
+	ASSIGN_HEAP("comp1", 1 /* key */, 1000 /* size */, flexos_comp1_alloc);
+
 #elif CONFIG_LIBFLEXOS_VMEPT
 	unsigned long shmem_addr = FLEXOS_VMEPT_SHARED_MEM_ADDR;
 	unsigned long size = FLEXOS_VMEPT_SHARED_MEM_SIZE;
@@ -452,6 +463,10 @@ do {									\
 	#endif
 #endif /* CONFIG_LIBFLEXOS_VMEPT */
 
+#elif CONFIG_LIBFLEXOS_MORELLO
+	flexos_shared_alloc = a;
+//	UK_CRASH("Using Morello config\n");
+
 #else
 	/* make shared heap point to the default heap for compatibility
 	 * purposes. The default heap doesn't change so it's fine. */
@@ -471,7 +486,7 @@ do {									\
 
 #if CONFIG_LIBUKSCHED
 	/* Init scheduler. */
-	s = uk_sched_default_init(/* __FLEXOS MARKER__: uksched allocator */);
+	s = uk_sched_default_init(flexos_shared_alloc);
 	if (unlikely(!s))
 		UK_CRASH("Could not initialize the scheduler\n");
 #endif

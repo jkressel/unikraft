@@ -104,7 +104,9 @@ struct thread_main_arg {
  * for compartment 1.
  */
 extern char _comp1[], _ecomp1[], _bss_comp1[], _ebss_comp1[];
+extern char _data[], __bss_end[];
 extern char flexos_comp0_alloc[];
+extern char flexos_comp1_alloc[];
 
 
 extern struct uk_alloc *flexos_shared_alloc;
@@ -367,7 +369,7 @@ do {									\
 
 #if CONFIG_LIBUKBOOT_INITBBUDDY
 #if CONFIG_LIBFLEXOS_MORELLO
-			a = uk_allocbbuddy_init(flexos_comp0_alloc, 1000 * __PAGE_SIZE);
+			
 #else
 			a = uk_allocbbuddy_init(md.base, md.len);
 #endif
@@ -464,8 +466,15 @@ do {									\
 #endif /* CONFIG_LIBFLEXOS_VMEPT */
 
 #elif CONFIG_LIBFLEXOS_MORELLO
+
+/* TODO Morello this needs to be inserted */
+	a = uk_allocbbuddy_init(flexos_comp0_alloc, 1000 * __PAGE_SIZE);
+	allocators[0] = a;
 	flexos_shared_alloc = a;
-//	UK_CRASH("Using Morello config\n");
+	allocators[1] = uk_allocbbuddy_init(flexos_comp1_alloc, 1000 * __PAGE_SIZE);
+	init_compartments();
+	add_comp(_data, __bss_end);
+	add_comp(_comp1, _ebss_comp1);
 
 #else
 	/* make shared heap point to the default heap for compatibility

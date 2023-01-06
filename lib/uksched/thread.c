@@ -49,7 +49,7 @@
 
 #if CONFIG_LIBFLEXOS_INTELPKU
 #include <uk/wait_types.h>
-struct uk_waitq_entry wq_entries[32] __attribute__((flexos_whitelist));
+struct uk_waitq_entry wq_entries[32];
 
 static int uk_num_threads = 0;
 #endif /* CONFIG_LIBFLEXOS_INTELPKU */
@@ -91,7 +91,6 @@ static void reent_init(struct _reent *reent)
 #endif
 }
 
-__attribute__((libc_callback))
 struct _reent *__getreent(void)
 {
 	struct _reent *_reent;
@@ -106,7 +105,7 @@ struct _reent *__getreent(void)
 }
 #endif /* CONFIG_LIBNEWLIBC */
 
-#if CONFIG_LIBFLEXOS_GATE_INTELPKU_PRIVATE_STACKS
+#if CONFIG_LIBFLEXOS_GATE_INTELPKU_PRIVATE_STACKS || CONFIG_LIBFLEXOS_MORELLO
 #define SET_TSB(sp_comp, key) 						\
 do {									\
 	tsb_comp ## key[thread->tid].sp = (sp_comp);			\
@@ -150,7 +149,8 @@ do {									\
  */
 int uk_thread_init_main(struct uk_thread *thread,
 		struct ukplat_ctx_callbacks *cbs, struct uk_alloc *allocator,
-		const char *name, void *stack /* __FLEXOS MARKER__: uk_thread_init decl */,
+		const char *name, void *stack , void* stack_comp1
+,
 		void *tls, void (*function)(void *), void *arg)
 {
 	unsigned long sp;
@@ -172,7 +172,9 @@ int uk_thread_init_main(struct uk_thread *thread,
 	/* The toolchain is going to insert a number of calls to
 	 * SETUP_STACK depending on the number of compartments, e.g.,
 	 * SETUP_STACK(stack_comp1, 1, NULL, NULL); */
-	/* __FLEXOS MARKER__: insert stack installations here. */
+	unsigned long sp1;
+SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
+
 
 	/* Call platform specific setup. */
 	thread->ctx = ukplat_thread_ctx_create(cbs, allocator, sp,
@@ -197,8 +199,8 @@ int uk_thread_init_main(struct uk_thread *thread,
 	//thread->reent = flexos_malloc_whitelist(sizeof(struct _reent), libc);
 	thread->reent = malloc(sizeof(struct _reent));
 	if (!thread->reent) {
-		flexos_gate(libukdebug, uk_pr_crit, FLEXOS_SHARED_LITERAL(
-				"Could not allocate reent!"));
+		flexos_nop_gate(0, 0, uk_pr_crit,
+				FLEXOS_SHARED_LITERAL("Could not allocate reent!"));
 		return -1;
 	}
 
@@ -207,7 +209,8 @@ int uk_thread_init_main(struct uk_thread *thread,
 	reent_init(thread->reent);
 #endif
 #if CONFIG_LIBUKSIGNAL
-	thread->signals_container = flexos_malloc_whitelist(sizeof(struct uk_thread_sig), libuksched);
+	thread->signals_container = uk_malloc(flexos_shared_alloc,
+					      sizeof(struct uk_thread_sig));
 	uk_thread_sig_init(thread->signals_container);
 #endif
 
@@ -219,7 +222,8 @@ int uk_thread_init_main(struct uk_thread *thread,
 
 int uk_thread_init(struct uk_thread *thread,
 		struct ukplat_ctx_callbacks *cbs, struct uk_alloc *allocator,
-		const char *name, void *stack /* __FLEXOS MARKER__: uk_thread_init decl */,
+		const char *name, void *stack , void* stack_comp1
+,
 		void *tls, void (*function)(void *), void *arg)
 {
 	unsigned long sp;
@@ -247,7 +251,9 @@ int uk_thread_init(struct uk_thread *thread,
 	/* The toolchain is going to insert a number of calls to
 	 * SETUP_STACK depending on the number of compartments, e.g.,
 	 * SETUP_STACK(stack_comp1, 1, NULL, NULL); */
-	/* __FLEXOS MARKER__: insert stack installations here. */
+	unsigned long sp1;
+SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
+
 
 	/* Call platform specific setup. */
 	thread->ctx = ukplat_thread_ctx_create(cbs, allocator, sp,
@@ -277,11 +283,11 @@ int uk_thread_init(struct uk_thread *thread,
 #if CONFIG_LIBFLEXOS_VMEPT
 	thread->reent = malloc(sizeof(struct _reent));
 #else
-	thread->reent = flexos_malloc_whitelist(sizeof(struct _reent), libc);
+	thread->reent = uk_malloc(flexos_shared_alloc, sizeof(struct _reent));
 #endif
 	if (!thread->reent) {
-		flexos_gate(libukdebug, uk_pr_crit, FLEXOS_SHARED_LITERAL(
-				"Could not allocate reent!"));
+		flexos_nop_gate(0, 0, uk_pr_crit,
+				FLEXOS_SHARED_LITERAL("Could not allocate reent!"));
 		return -1;
 	}
 
@@ -294,16 +300,18 @@ int uk_thread_init(struct uk_thread *thread,
 	pkru = rdpkru();
 	wrpkru(0x0);
 #endif /* CONFIG_LIBFLEXOS_INTELPKU */
-	thread->signals_container = flexos_malloc_whitelist(sizeof(struct uk_thread_sig), libuksched);
+	thread->signals_container = uk_malloc(flexos_shared_alloc,
+					      sizeof(struct uk_thread_sig));
 	uk_thread_sig_init(thread->signals_container);
 #if CONFIG_LIBFLEXOS_INTELPKU
 	wrpkru(pkru);
 #endif /* CONFIG_LIBFLEXOS_INTELPKU */
 #endif
 
-	flexos_gate(libukdebug, uk_pr_info, FLEXOS_SHARED_LITERAL(
-		    "Thread \"%s\": pointer: %p, stack: %p - %p, tls: %p\n"),
-		    name, thread, stack, (void *) ((uintptr_t) stack + STACK_SIZE), tls);
+	flexos_nop_gate(0, 0, uk_pr_info,
+			FLEXOS_SHARED_LITERAL("Thread \"%s\": pointer: %p, stack: %p - %p, tls: %p\n"),
+			name, thread, stack,
+			(void *)((uintptr_t)stack + STACK_SIZE), tls);
 
 	return 0;
 }

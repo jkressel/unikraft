@@ -129,7 +129,8 @@ struct uk_sched *uk_sched_create(struct uk_alloc *a, size_t prv_size)
 
 	sched = uk_malloc(a, sizeof(struct uk_sched) + prv_size);
 	if (sched == NULL) {
-		flexos_gate(libc, uk_pr_warn, "Failed to allocate scheduler\n");
+		flexos_nop_gate(0, 0, uk_pr_warn,
+				"Failed to allocate scheduler\n");
 		return NULL;
 	}
 
@@ -161,8 +162,8 @@ static void *create_stack(struct uk_alloc *allocator)
 #else
 			      STACK_SIZE, STACK_SIZE) != 0) {
 #endif /* CONFIG_LIBFLEXOS_ENABLE_DSS */
-		flexos_gate(libc, uk_pr_err, FLEXOS_SHARED_LITERAL(
-			"Failed to allocate thread stack: Not enough memory\n"));
+		flexos_nop_gate(0, 0, uk_pr_err,
+				FLEXOS_SHARED_LITERAL("Failed to allocate thread stack: Not enough memory\n"));
 		return NULL;
 	}
 
@@ -179,7 +180,8 @@ static void *uk_thread_tls_create(struct uk_alloc *allocator)
 
 	if (uk_posix_memalign(allocator, &tls, ukarch_tls_area_align(),
 			      ukarch_tls_area_size()) != 0) {
-		flexos_gate(libc, uk_pr_err, "Failed to allocate thread TLS area\n");
+		flexos_nop_gate(0, 0, uk_pr_err,
+				"Failed to allocate thread TLS area\n");
 		return NULL;
 	}
 	ukarch_tls_area_copy(tls);
@@ -194,8 +196,8 @@ static inline void PROTECT_STACK(void *stack, int key)
 	if (rdpkru() == 0x0) {
 		flexos_intelpku_mem_set_key(stack, STACK_SIZE / __PAGE_SIZE, key);
 	} else {
-		flexos_gate(libflexos-core, flexos_intelpku_mem_set_key,
-			stack, STACK_SIZE / __PAGE_SIZE, key);
+		flexos_nop_gate(0, 0, flexos_intelpku_mem_set_key, stack,
+				STACK_SIZE / __PAGE_SIZE, key);
 	}
 }
 
@@ -235,6 +237,15 @@ do {									\
 	SHARE_DSS((stack_comp));					\
 } while (0)
 
+#define ALLOC_COMP_STACK_MORELLO(stack_comp, allocator) 				\
+do {									\
+	/* allocate stack for compartment 'key' */			\
+	if ((stack_comp) == NULL)					\
+		(stack_comp) = create_stack(allocator);		\
+	if ((stack_comp) == NULL)					\
+		goto err;						\
+} while (0)
+
 void uk_sched_idle_init(struct uk_sched *sched,
 		void *stack, void (*function)(void *))
 {
@@ -244,9 +255,17 @@ void uk_sched_idle_init(struct uk_sched *sched,
 
 	UK_ASSERT(sched != NULL);
 
-	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
+	/* TODO Morello - you know the drill, replace this sucka */
 
-	/* __FLEXOS MARKER__: insert stack allocations here. */
+	ALLOC_COMP_STACK_MORELLO(stack, get_alloc(0));
+
+	// ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
+
+
+
+	void *stack_comp1 = NULL;
+ALLOC_COMP_STACK(stack_comp1, 1);
+
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
@@ -256,7 +275,8 @@ void uk_sched_idle_init(struct uk_sched *sched,
 	/* same as main, we want to call the variant that doesn't execute gates */
 	rc = uk_thread_init_main(idle,
 			&sched->plat_ctx_cbs, sched->allocator,
-			"Idle", stack /* __FLEXOS MARKER__: uk_thread_init call */,
+			"Idle", stack , stack_comp1
+,
 			tls, function, NULL);
 
 	if (rc)
@@ -281,6 +301,7 @@ struct uk_thread *uk_sched_thread_create_main(struct uk_sched *sched,
 {
 	struct uk_thread *thread = NULL;
 	void *stack = NULL;
+	void *stack_1 = NULL;
 	int rc;
 	void *tls = NULL;
 
@@ -289,17 +310,21 @@ struct uk_thread *uk_sched_thread_create_main(struct uk_sched *sched,
 		uk_pr_err("Failed to allocate thread\n");
 		goto err;
 	}
+//////////////////// HERE TODO Morello
+	ALLOC_COMP_STACK_MORELLO(stack, get_alloc(0));
+	void *stack_comp1 = NULL;
+	ALLOC_COMP_STACK_MORELLO(stack_comp1, get_alloc(1));
 
-	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
+//ALLOC_COMP_STACK(stack_comp1, 1);
 
-	/* __FLEXOS MARKER__: insert stack allocations here. */
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init_main(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			"main", stack /* __FLEXOS MARKER__: uk_thread_init call */,
+			"main", stack , stack_comp1
+,
 			tls, function, arg);
 	if (rc)
 		goto err;
@@ -339,20 +364,24 @@ struct uk_thread *uk_sched_thread_create(struct uk_sched *sched,
 
 	thread = uk_malloc(sched->allocator, sizeof(struct uk_thread));
 	if (thread == NULL) {
-		flexos_gate(libc, uk_pr_err, "Failed to allocate thread\n");
+		flexos_nop_gate(0, 0, uk_pr_err,
+				"Failed to allocate thread\n");
 		goto err;
 	}
 
 	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
 
-	/* __FLEXOS MARKER__: insert stack allocations here. */
+	void *stack_comp1 = NULL;
+ALLOC_COMP_STACK(stack_comp1, 1);
+
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			name, stack /* __FLEXOS MARKER__: uk_thread_init call */,
+			name, stack , stack_comp1
+,
 			tls, function, arg);
 	if (rc)
 		goto err;
@@ -410,20 +439,24 @@ struct uk_thread *uk_sched_thread_create_rpc_only(struct uk_sched *sched,
 
 	thread = uk_malloc(sched->allocator, sizeof(struct uk_thread));
 	if (thread == NULL) {
-		flexos_gate(libc, uk_pr_err, "Failed to allocate thread\n");
+		flexos_nop_gate(0, 0, uk_pr_err,
+				"Failed to allocate thread\n");
 		goto err;
 	}
 
 	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
 
-	/* __FLEXOS MARKER__: insert stack allocations here. */
+	void *stack_comp1 = NULL;
+ALLOC_COMP_STACK(stack_comp1, 1);
+
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			name, stack /* __FLEXOS MARKER__: uk_thread_init call */,
+			name, stack , stack_comp1
+,
 			tls, function, arg);
 	if (rc)
 		goto err;

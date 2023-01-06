@@ -44,6 +44,10 @@
 #define flexos_intelpku_gate_r(...) UK_CTASSERT(0)
 #endif /* CONFIG_LIBFLEXOS_INTELPKU */
 
+#if CONFIG_LIBFLEXOS_MORELLO
+#include <flexos/impl/morello.h>
+#endif
+
 /* Enable/Disable VM/EPT support */
 #if CONFIG_LIBFLEXOS_VMEPT
 #include <flexos/impl/vmept.h>
@@ -58,7 +62,7 @@
 #if (!CONFIG_LIBFLEXOS_INTELPKU && !CONFIG_LIBFLEXOS_VMEPT)
 #include <uk/alloc.h>
 #define flexos_shared_alloc _uk_alloc_head
-#define flexos_comp0_alloc _uk_alloc_head
+//#define flexos_comp0_alloc _uk_alloc_head
 #endif /* (!CONFIG_LIBFLEXOS_INTELPKU && !CONFIG_LIBFLEXOS_VMEPT) */
 
 /* Do not build with gate placeholders. These should be replaced by the

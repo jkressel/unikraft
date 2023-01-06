@@ -44,7 +44,7 @@ __asm__ (	\
 	"mov x10, %0\n"	\
 	"mul x11, x10, %1\n"	\
 	"add x11, x11, %2\n"	\
-	"ldp x12, x13 [x11]\n"	\
+	"ldp x12, x13, [x11]\n"	\
 	"stp x12, x13, [sp, #-32]!\n"	\
 	:				\
 	: "r"(uk_thread_get_tid()), "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
@@ -59,10 +59,11 @@ __asm__ (	\
 /* x11 hold the base of tsb_comp ## key_from as calculated above */ 	\
 \
 __asm__ (	\
-	"stp sp, fp, [x11]\n"	\
+	"mov x11, sp\n"	\
+	"stp x11, fp, [x11]\n"	\
 	:				\
 	: 	\
-	: "sp"	\
+	: "x11", "memory"	\
 );	\
 	\
 	\

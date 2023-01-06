@@ -35,9 +35,11 @@ extern char _text[], _etext[];
 extern char compartment_trampoline[];
 extern char compartment_trampoline_end[];
 
-void *__capability switcher_capabilities[NUMBER_OF_COMPARTMENTS];
+void *__capability switcher_capabilities[2];
 
-void *__capability switcher_call;
+//TODO Morello replace
+void *__capability switcher_call_comp0;
+void *__capability switcher_call_comp1 __attribute__((section(".data_comp1")));
 
 uint64_t compartment_id = 0;
 
@@ -67,9 +69,12 @@ void init_compartments()
 	comps_addr = cheri_setbounds(comps_addr, (uintptr_t)(caps_size));
 	switcher_capabilities[0] = comps_addr;
 
-	switcher_call = (void *__capability) switcher_capabilities;
+	//TODO Morello replace
+	switcher_call_comp0 = (void *__capability) switcher_capabilities;
+	switcher_call_comp1 = (void *__capability) switcher_capabilities;
 	//Seal this capability to be only used via a `lpb` type call
-	asm("seal %w0, %w0, lpb" : "+r"(switcher_call) :);
+	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp0) :);
+	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp1) :);
 
 	__flexos_morello_gate1(0,1,1,0);
 }

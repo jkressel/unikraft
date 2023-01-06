@@ -39,6 +39,11 @@ struct comp
 extern struct comp compartments[NUMBER_OF_COMPARTMENTS];
 
 
+//TODO Morello replace
+extern void *__capability switcher_call_comp0;
+extern void *__capability switcher_call_comp1;
+
+
 /*
  * CHERI ISA-defined constants for capabilities -- suitable for inclusion from
  * assembly source code.

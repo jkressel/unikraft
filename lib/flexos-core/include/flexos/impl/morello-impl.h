@@ -38,15 +38,13 @@ __asm__ (	\
 );									\
 	\
 	\
-/* - need to pass thread id? No, need to pass the sp and fp. Also need to backup current. 	*/	\
-\
+	\
 /* x12 will hold tsb sp and x13 will hold tsb fp */ 	\
 __asm__ (	\
 	"mov x10, %0\n"	\
 	"mul x11, x10, %1\n"	\
 	"add x11, x11, %2\n"	\
-	"ldr x12, [x11]\n"	\
-	"ldr x13, [x11, #8]\n"	\
+	"ldp x12, x13 [x11]\n"	\
 	"stp x12, x13, [sp, #-32]!\n"	\
 	:				\
 	: "r"(uk_thread_get_tid()), "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
@@ -58,11 +56,46 @@ __asm__ (	\
 /* backup the current sp and fp */ 	\
 /*tsb_comp ## key_from[tid].sp = register asm("sp");*/	\
 /*tsb_comp ## key_from[tid].bp = register asm("fp");*/	\
+/* x11 hold the base of tsb_comp ## key_from as calculated above */ 	\
 \
-/* - need to handle arguments passed	\
-* - need to load switcher caps			\
-* - need to pass the source and dest compartment	\
-* - invoke the switcher	*/ \
+__asm__ (	\
+	"stp sp, fp, [x11]\n"	\
+	:				\
+	: 	\
+	: "sp"	\
+);	\
+	\
+	\
+/* Now we need to load the dest compartment id into a register */	\
+__asm__ (	\
+	"mov x10, %0\n"	\
+	:				\
+	: "r"(key_to)	\
+	: "x10"	\
+);	\
+	\
+	\
+	\
+/* Okay now we need to sort out the args, they need to go in c0-c7 */	\
+/* In this case we only have one argument so only need to use c0 */ 	\
+__asm__ (	\
+	"mov c0, %0\n"	\
+	:				\
+	: "r"(arg1)	\
+	: "c0"	\
+);	\
+	\
+	\
+	\
+/* Load the switcher caps and branch to switcher using unsealing instruction ldpblr */	\
+__asm__ (	\
+	"ldr c11, [%0]\n"	\
+	"ldpblr c11, [c11]\n"	\
+	:				\
+	: "r"((switcher_call_comp ## key_from))	\
+	: "c11"	\
+);	\
+	\
 	\
 } while (0)
 

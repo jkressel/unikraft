@@ -12,6 +12,7 @@ struct uk_alloc;
 
 int get_compartment_id();
 void init_compartments();
+void test_things();
 void add_comp(uint64_t _start_addr, uint64_t _end_addr);
 struct uk_alloc *get_alloc(int compartment_id);
 
@@ -22,6 +23,13 @@ struct uk_thread_status_block {
 	uint64_t sp;
 	uint64_t bp;
 };
+
+struct morello_compartment_switcher_caps {
+	void *__capability ddc;
+	void *__capability pcc;
+};
+
+extern struct morello_compartment_switcher_caps switcher_capabilities;
 
 
 //TODO Morello Replace
@@ -71,9 +79,28 @@ extern void *__capability switcher_call_comp1;
 #define	CHERI_PERM_LOAD				(1 << 17)	/* 0x00020000 */
 
 
+#define	cheri_setbounds(x, y)	__builtin_cheri_bounds_set((x), (y))
+#define	cheri_andperm(x, y)	__builtin_cheri_perms_and((x), (y))
+#define	cheri_setaddress(x, y)	__builtin_cheri_address_set((x), (y))
+#define	cheri_gettag(x)		__builtin_cheri_tag_get((x))
+#define	cheri_getaddress(x)	__builtin_cheri_address_get((x))
+#define	cheri_getpcc()		__builtin_cheri_program_counter_get()
+
+
+#define morello_create_capability_from_ptr(ptr, size, store_to_ptr)	\
+	__asm__ volatile(	\
+		"cvtp c0, %0\n"	\
+		"scbnds c0, c0, %2\n"	\
+		"str c0, [%1]\n"	\
+		:	\
+		: "r"((uintptr_t *)(ptr)), "r"((uintptr_t *)(store_to_ptr)), "r"(size)	\
+		: "c0", "x1", "memory"	\
+	)
+
+
 
 //Default permissions given to a capability
-#define DEFAULT_CAPS (CHERI_PERM_LOAD|CHERI_PERM_STORE|CHERI_PERM_EXECUTE|CHERI_PERM_LOAD_CAP|CHERI_PERM_STORE_CAP|CHERI_PERM_STORE_LOCAL_CAP|CHERI_PERM_BRANCH_SEALED_PAIR|CHERI_PERM_MUTABLE_LOAD|CHERI_PERM_GLOBAL|CHERI_PERM_EXECUTIVE)
+#define DEFAULT_CAPS (CHERI_PERM_LOAD|CHERI_PERM_STORE|CHERI_PERM_EXECUTE|CHERI_PERM_LOAD_CAP|CHERI_PERM_STORE_CAP|CHERI_PERM_STORE_LOCAL_CAP|CHERI_PERM_BRANCH_SEALED_PAIR|CHERI_PERM_MUTABLE_LOAD|CHERI_PERM_GLOBAL|CHERI_PERM_EXECUTIVE|CHERI_PERM_GLOBAL)
 
 
 

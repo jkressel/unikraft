@@ -21,17 +21,19 @@ int uk_thread_get_tid(void)
 	return *((int *) round_pgup((unsigned long) ((sp & STACK_MASK_TOP) + 1)));
 }
 
-#define __flexos_morello_gate1(key_from, key_to, fname, arg1)		\
+#define __flexos_morello_gate1(key_from, key_to, fname, arg1) 		\
 do {									\
 /* todo \
 * - backup registers we need first, come back to this */ \
+\
+\
 	\
-__asm__ (	\
-	"stp c9, c10, [sp, #-32]!\n"	\
-	"stp c11, c12, [sp, #-32]!\n"	\
-	"stp c13, c14, [sp, #-32]!\n"	\
-	"stp c15, c16, [sp, #-32]!\n"	\
-	"str c17, [sp, #-16]!\n"		\
+__asm__ volatile (	\
+	"str c9, [sp, #-16]!\n"	\
+	"stp c10, c11, [sp, #-32]!\n"	\
+	"stp c12, c13, [sp, #-32]!\n"	\
+	"stp c14, c15, [sp, #-32]!\n"	\
+	"stp c16, c17, [sp, #-32]!\n"		\
 	:								\
 	:								\
 	: "sp"							\
@@ -45,7 +47,7 @@ __asm__ (	\
 	"mul x11, x10, %1\n"	\
 	"add x11, x11, %2\n"	\
 	"ldp x12, x13, [x11]\n"	\
-	"stp x12, x13, [sp, #-32]!\n"	\
+	"stp x12, x13, [sp, #-16]!\n"	\
 	:				\
 	: "r"(uk_thread_get_tid()), "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
 	: "x10", "x11", "x12", "x13", "sp"	\
@@ -59,11 +61,11 @@ __asm__ (	\
 /* x11 hold the base of tsb_comp ## key_from as calculated above */ 	\
 \
 __asm__ (	\
-	"mov x11, sp\n"	\
-	"stp x11, fp, [x11]\n"	\
-	:				\
+	"mov x10, sp\n"	\
+	"stp x10, fp, [x11]\n"	\
+	:		\
 	: 	\
-	: "x11", "memory"	\
+	: "x10", "memory"	\
 );	\
 	\
 	\
@@ -84,20 +86,46 @@ __asm__ (	\
 	:				\
 	: "r"(arg1)	\
 	: "c0"	\
-);	\
+); 	\
 	\
 	\
 	\
 /* Load the switcher caps and branch to switcher using unsealing instruction ldpblr */	\
-__asm__ (	\
+__asm__ volatile(	\
 	"ldr c11, [%0]\n"	\
-	"ldpblr c11, [c11]\n"	\
+	"ldpblr c29, [c11]\n" \
 	:				\
-	: "r"((switcher_call_comp ## key_from))	\
-	: "c11"	\
+	: "r"((uintptr_t *)(&(switcher_call_comp ## key_from)))	\
+	: "c11", "c29", "c30"	\
+);	\
+/* Need to do reentry */	\
+/* - Restore stack and frame and tsb*/	\
+/* - Pop registers saved */	\
+/* restore tsb */ 	\
+__asm__ (	\
+	"mov x10, %0\n"\
+	"mul x11, x10, %1\n"	\
+	"add x11, x11, %2\n"	\
+	"ldp x12, x13, [sp], #16\n"	\
+	"stp x12, x13, [x11]\n"\
+	:				\
+	: "r"(uk_thread_get_tid()), "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
+	: "x10", "x11", "x12", "x13", "sp"	\
 );	\
 	\
 	\
+	\
+__asm__ volatile(	\
+	"ldp c16, c17, [sp], #32\n"		\
+	"ldp c14, c15, [sp], #32\n"	\
+	"ldp c12, c13, [sp], #32\n"	\
+	"ldp c10, c11, [sp], #32\n"	\
+	"ldr c9, [sp], #16\n"	\
+	:								\
+	:								\
+	: "c18", "c17", "c16", "c15", "c14", "c13",	\
+	 "c12", "c11", "c10", "c9"							\
+);	\
 } while (0)
 
 #define __flexos_morello_gate1_r(key_from, key_to, retval, fname, arg1)\

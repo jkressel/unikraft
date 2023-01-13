@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
+#include <stdio.h>
 
 struct uk_alloc *allocators[NUMBER_OF_COMPARTMENTS];
 uint64_t stacks[NUMBER_OF_COMPARTMENTS];
@@ -24,10 +25,6 @@ struct uk_thread_status_block tsb_comp0[32] __attribute__((used));
 struct uk_thread_status_block tsb_comp1[32]  __attribute__((section(".data_comp1"))) __attribute__((used));
 
 
-#define	cheri_setbounds(x, y)	__builtin_cheri_bounds_set((x), (y))
-#define	cheri_andperm(x, y)	__builtin_cheri_perms_and((x), (y))
-#define	cheri_setaddress(x, y)	__builtin_cheri_address_set((x), (y))
-
 extern char switch_compartment[];
 extern char switch_compartment_end[];
 extern char _compartment_caps_start[], _compartment_caps_end[];
@@ -35,7 +32,7 @@ extern char _text[], _etext[];
 extern char compartment_trampoline[];
 extern char compartment_trampoline_end[];
 
-void *__capability switcher_capabilities[2];
+struct morello_compartment_switcher_caps switcher_capabilities;
 
 //TODO Morello replace
 void *__capability switcher_call_comp0;
@@ -57,29 +54,27 @@ int get_compartment_id() {
 
 void init_compartments()
 {
-   assert((uintptr_t)(&switcher_capabilities) % 16 == 0);
-	void *__capability switch_cap = (void *__capability) switch_compartment;
-	size_t switcher_size = (uintptr_t) switch_compartment_end - (uintptr_t) switch_compartment;
-	switch_cap = cheri_setbounds(switch_cap, switcher_size);
-	switcher_capabilities[1] = switch_cap;
+	printf("got to init comps\n");
+   	assert((uintptr_t)(&switcher_capabilities) % 16 == 0);
+	uintptr_t switcher_size = (uintptr_t) switch_compartment_end - (uintptr_t) switch_compartment;
+	morello_create_capability_from_ptr(((uintptr_t)switch_compartment), switcher_size, ((uintptr_t *)(&(switcher_capabilities.pcc))));
 
-	void *__capability comps_addr = (void *__capability) _compartment_caps_start;
     size_t caps_size = (uintptr_t) _compartment_caps_end - (uintptr_t) _compartment_caps_start;
-	//possibly need to check this is the right size if something is going wrong
-	comps_addr = cheri_setbounds(comps_addr, (uintptr_t)(caps_size));
-	switcher_capabilities[0] = comps_addr;
+	morello_create_capability_from_ptr(((uintptr_t)_compartment_caps_start), caps_size, ((uintptr_t *)(&(switcher_capabilities.ddc))));
+
+	assert((uintptr_t)(&switcher_call_comp0) % 16 == 0);
 
 	//TODO Morello replace
-	switcher_call_comp0 = (void *__capability) switcher_capabilities;
-	switcher_call_comp1 = (void *__capability) switcher_capabilities;
+	morello_create_capability_from_ptr((uintptr_t *)(&(switcher_capabilities)), sizeof(switcher_capabilities), ((uintptr_t *)(&(switcher_call_comp0))));
+	morello_create_capability_from_ptr((uintptr_t *)(&(switcher_capabilities)), sizeof(switcher_capabilities), ((uintptr_t *)(&(switcher_call_comp1))));
+
 	//Seal this capability to be only used via a `lpb` type call
 	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp0) :);
 	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp1) :);
 
-	__flexos_morello_gate1(0,1,1,0);
-}
+	printf("got to end of init comps\n");
 
-// okay then no need to be so mean about my hard work here :(
+}
 
 // This is what is needed for a compartment to be fully initialised
 // 1. DDC needs to encompass the compartment data and bss section
@@ -123,6 +118,11 @@ void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 
 	compartments[compartment_id] = new_comp;
 	++compartment_id;
+}
+
+void test_things() {
+	__flexos_morello_gate1(0,1,1,switcher_call_comp0);	
+
 }
 
 struct uk_alloc *get_alloc(int compartment_id) {

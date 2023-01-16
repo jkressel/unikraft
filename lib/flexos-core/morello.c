@@ -60,7 +60,8 @@ void init_compartments()
 	morello_create_capability_from_ptr(((uintptr_t)switch_compartment), switcher_size, ((uintptr_t *)(&(switcher_capabilities.pcc))));
 
     size_t caps_size = (uintptr_t) _compartment_caps_end - (uintptr_t) _compartment_caps_start;
-	morello_create_capability_from_ptr(((uintptr_t)_compartment_caps_start), caps_size, ((uintptr_t *)(&(switcher_capabilities.ddc))));
+//	morello_create_capability_from_ptr(((uintptr_t)_compartment_caps_start), caps_size, ((uintptr_t *)(&(switcher_capabilities.ddc))));
+	morello_create_capability_from_ptr(((uintptr_t)compartments), sizeof(compartments), ((uintptr_t *)(&(switcher_capabilities.ddc))));
 
 	assert((uintptr_t)(&switcher_call_comp0) % 16 == 0);
 
@@ -88,33 +89,20 @@ void init_compartments()
 
 void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 {
-	//assert(id < COMP_COUNT);
+	assert(compartment_id < NUMBER_OF_COMPARTMENTS);
 	struct comp new_comp;
-	new_comp.id = compartment_id;
+//	new_comp.id = compartment_id;
 
-	// Ensure 16-byte alignment throught the compartment bounds
-	//assert(((uintptr_t) new_comp.compartment_start) % 16 == 0);
-	//assert(((uintptr_t) new_comp.stack_addr) % 16 == 0);
-	//assert(total_comp_size % 16 == 0);
+//	assert((uintptr_t)(&switcher_capabilities) % 16 == 0);
 
-	// When creating a compartment, store a local copy of the capability which
-	// will allow us to call `switch_compartment` in the heap of the compartment.
-
-	//This is for the DDC (data capability)
-	void *__capability comp_ddc = (void *__capability) _start_addr;
+	//This is for the DDC
 	size_t comp_ddc_size = (uintptr_t) _end_addr - (uintptr_t) _start_addr;
-	comp_ddc = cheri_setbounds(comp_ddc, (uintptr_t)comp_ddc_size);
-    comp_ddc = cheri_andperm(comp_ddc, DEFAULT_CAPS);
-	new_comp.ddc = comp_ddc;
+	morello_create_capability_from_ptr((uintptr_t *)(_start_addr), comp_ddc_size, ((uintptr_t *)(&(new_comp.ddc))));
 
 	// Set up a capability pointing to the function we want to call within the
 	// compartment. This will be loaded as the PCC when the function is called.
-	void *__capability comp_fn = (void *__capability) _text;
-	size_t comp_fn_size = (uintptr_t) _etext - (uintptr_t) comp_fn;
-	comp_fn = cheri_setbounds(comp_fn, comp_fn_size);
-    comp_fn = cheri_setaddress(comp_fn, (uintptr_t)compartment_trampoline);
-    comp_fn = cheri_andperm(comp_fn, DEFAULT_CAPS);
-	new_comp.comp_fn = comp_fn;
+	size_t comp_text_size = (uintptr_t) _etext - (uintptr_t) _text;
+	morello_create_capability_from_ptr((uintptr_t *)(_start_addr), comp_text_size, ((uintptr_t *)(&(new_comp.pcc))));
 
 	compartments[compartment_id] = new_comp;
 	++compartment_id;

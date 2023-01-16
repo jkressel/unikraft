@@ -39,9 +39,8 @@ extern struct uk_thread_status_block tsb_comp1[32];
 
 struct comp
 {
-	uint64_t id;
 	void *__capability ddc;
-	void *__capability comp_fn;
+	void *__capability pcc;
 };
 
 extern struct comp compartments[NUMBER_OF_COMPARTMENTS];

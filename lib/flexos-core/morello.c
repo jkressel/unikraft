@@ -32,6 +32,17 @@ extern char _text[], _etext[];
 extern char compartment_trampoline[];
 extern char compartment_trampoline_end[];
 
+#define morello_create_capability_with_addr_from_ptr(ptr, size, store_to_ptr)	\
+	__asm__ volatile(	\
+		"cvtp c0, %0\n"	\
+		"scbnds c0, c0, %2\n"	\
+		"scvalue c0, c0, %3\n"	\
+		"str c0, [%1]\n"	\
+		:	\
+		: "r"((uintptr_t *)(ptr)), "r"((uintptr_t *)(store_to_ptr)), "r"(size), "r"(compartment_trampoline)	\
+		: "c0", "x1", "memory"	\
+	)
+
 struct morello_compartment_switcher_caps switcher_capabilities;
 
 //TODO Morello replace
@@ -102,7 +113,7 @@ void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 	// Set up a capability pointing to the function we want to call within the
 	// compartment. This will be loaded as the PCC when the function is called.
 	size_t comp_text_size = (uintptr_t) _etext - (uintptr_t) _text;
-	morello_create_capability_from_ptr((uintptr_t *)(_start_addr), comp_text_size, ((uintptr_t *)(&(new_comp.pcc))));
+	morello_create_capability_with_addr_from_ptr((uintptr_t *)(_text), comp_text_size, ((uintptr_t *)(&(new_comp.pcc))));
 
 	compartments[compartment_id] = new_comp;
 	++compartment_id;

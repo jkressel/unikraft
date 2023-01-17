@@ -38,15 +38,15 @@ switch_compartment:
 ////////////////////////////////////////////////
 // c12 = compartment ddc
 // c11 = compartment pcc
+////////////////////////////////////////////////
 
 //  set new compartment ddc
     msr ddc, c12
 
-    mov x11, sp
-    cvt c18, c18, x11
+    mov x17, sp
+    cvt c18, c18, x17
     scbnds c18, c18, #32
-    scvalue c18, c18, x11
-//    ldpbrs c29, [c17]
+    scvalue c18, c18, x17
     seal c18, c18, lpb
 
 //  size of tsb
@@ -64,25 +64,21 @@ switch_compartment:
 //  load fp
     ldr x15, [x13, #8]
 
-//  some backup, remove later
-    mov x16, sp
-    mov x17, fp
-
 //  set new sp and fp
-//    mov sp, x14
-//    mov fp, x15
+    mov sp, x14
+    mov fp, x15
 
 //  branch, we don't want to return
-//    blr x9
+    br c11
 
 //  try storing something
-//    mov x14, #69
-//    str x14, [sp, #-8]
+    mov x14, #79
+    str x14, [sp, #-8]
 
 
 //  restore, for now, remove later
-    mov sp, x16
-    mov fp, x17
+//    mov sp, x16
+//    mov fp, x17
 
 ldpbr c29, [c18]
     

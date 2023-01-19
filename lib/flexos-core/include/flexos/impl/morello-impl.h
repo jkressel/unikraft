@@ -35,6 +35,11 @@ __asm__ volatile (	\
 	"stp c14, c15, [sp, #-32]!\n"	\
 	"stp c16, c17, [sp, #-32]!\n"		\
 	"stp c29, c31, [sp, #-32]!\n"		\
+	"stp c19, c20, [sp, #-32]!\n"		\
+	"stp c21, c22, [sp, #-32]!\n"		\
+	"stp c23, c24, [sp, #-32]!\n"		\
+	"stp c25, c26, [sp, #-32]!\n"		\
+	"stp c27, c28, [sp, #-32]!\n"		\
 	:								\
 	:								\
 	: "sp"							\
@@ -90,10 +95,10 @@ __asm__ volatile(	\
 /* Okay now we need to sort out the args, they need to go in c0-c7 */	\
 /* In this case we only have one argument so only need to use c0 */ 	\
 __asm__ volatile(	\
-	"mov c0, %0\n"	\
+	"mov x0, %0\n"	\
 	:				\
 	: "r"(arg1)	\
-	: "c0"	\
+	: "c0", "x7", "x8", "x9", "x13", "x14"	\
 ); 	\
 	\
 	\
@@ -110,32 +115,37 @@ __asm__ volatile(	\
 \
 \
 __asm__ volatile (	\
+	"mov x10, %0\n"\
 	"msr ddc, c29\n"	\
 	:	\
-	:	\
-	: "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8"	\
+	:	"r"(uk_thread_get_tid())	\
+	: "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x10"	\
 );	\
 /* Need to do reentry */	\
 /* - Restore stack and frame and tsb*/	\
 /* - Pop registers saved */	\
 /* restore tsb */ 	\
 __asm__ volatile(	\
-	"mov x10, %0\n"\
-	"mul x11, x10, %1\n"	\
-	"add x11, x11, %2\n"	\
+	"mul x11, x10, %0\n"	\
+	"add x11, x11, %1\n"	\
 	"ldp x12, fp, [x11]\n"	\
 	"mov sp, x12\n"	\
 	"ldp x12, x13, [sp, #32]!\n"	\
 	"add sp, sp, #16\n"	\
 	"stp x12, x13, [x11]\n"\
 	:				\
-	: "r"(uk_thread_get_tid()), "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
+	: "r" (sizeof(struct uk_thread_status_block)), "r" ((tsb_comp ## key_from))	\
 	: "x10", "x11", "x12", "x13", "sp", "fp"	\
 );	\
 	\
 	\
 	\
 __asm__ volatile(	\
+	"ldp c27, c28, [sp], #32\n"		\
+	"ldp c25, c26, [sp], #32\n"		\
+	"ldp c23, c24, [sp], #32\n"		\
+	"ldp c21, c22, [sp], #32\n"		\
+	"ldp c19, c20, [sp], #32\n"		\
 	"ldp c29, c31, [sp], #32\n"		\
 	"ldp c16, c17, [sp], #32\n"		\
 	"ldp c14, c15, [sp], #32\n"	\

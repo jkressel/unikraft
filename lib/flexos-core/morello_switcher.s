@@ -70,23 +70,7 @@ switch_compartment:
 
 //  branch, we don't want to return
     br c11
-
-//  try storing something
-    mov x14, #79
-    str x14, [sp, #-8]
-
-
-//  restore, for now, remove later
-//    mov sp, x16
-//    mov fp, x17
-
-ldpbr c29, [c18]
     
-
-
-//    msr ddc, c0
-
-    ret       clr
 
 
 //Need to preserve x19-x29

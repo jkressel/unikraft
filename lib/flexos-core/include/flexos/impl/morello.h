@@ -15,6 +15,7 @@ void init_compartments();
 void test_things();
 void add_comp(uint64_t _start_addr, uint64_t _end_addr);
 struct uk_alloc *get_alloc(int compartment_id);
+void morello_enter_main(void (*_comp_fn)());
 
 extern struct uk_alloc *allocators[NUMBER_OF_COMPARTMENTS];
 extern uint64_t stacks[NUMBER_OF_COMPARTMENTS];

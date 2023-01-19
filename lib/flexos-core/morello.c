@@ -120,7 +120,7 @@ void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 }
 
 void test_things() {
-	__flexos_morello_gate1(0,1,1,switcher_call_comp0);	
+	//__flexos_morello_gate1(0,1,1,switcher_call_comp0);	
 
 }
 
@@ -133,4 +133,20 @@ struct uk_alloc *get_alloc(int compartment_id) {
 		return NULL;
 	}
 
+}
+
+void morello_enter_main(void (*_comp_fn)()) {
+	__asm__ volatile (
+		"mov c10, %1\n"
+		"ldr x11, =(cont)\n"
+		"scvalue c10, c10, x11\n"
+		"mov c11, %2\n"
+		"msr ddc, c11\n"
+		"br c10\n"
+		"cont: mov x9, %0\n"
+		"blr x9\n"
+		:
+		: "r"(_comp_fn), "r"(compartments[0].pcc), "r"(compartments[0].ddc) 
+		: "c10", "c11", "x9"
+	);
 }

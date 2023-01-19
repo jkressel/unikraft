@@ -4,9 +4,9 @@
 compartment_trampoline:
 
 str c18, [sp, #-16]!
-brnch:
-b brnch
-//blr x9
+//brnch:
+//b brnch
+blr x9
 //need to handle return values
 ldr c18, [sp], #16
 ldpbr c29, [c18]

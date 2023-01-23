@@ -21,6 +21,204 @@ int uk_thread_get_tid(void)
 	return *((int *) round_pgup((unsigned long) ((sp & STACK_MASK_TOP) + 1)));
 }
 
+#define IS_CAP(arg)	(sizeof(arg) == 16)
+
+#define __flexos_morello_move_argument1_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c0, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c0", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument2_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c1, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c1", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument3_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c2, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c2", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument4_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c3, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c3", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument5_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c4, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c4", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument6_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c5, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c5", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument7_cap(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov c6, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "c6", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument1_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x0, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x0", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument2_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x1, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x1", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument3_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x2, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x2", "x7", "x8", "x9", "x13", "x14"	\
+); 	\
+} while (0)
+
+#define __flexos_morello_move_argument4_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x3, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x3", "x7", "x8", "x9", "x13", "x14"	\
+); 	\
+} while (0)
+
+#define __flexos_morello_move_argument5_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x4, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x4", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument6_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x5, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x5", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define __flexos_morello_move_argument7_int(arg) 	\
+do {	\
+	__asm__ (	\
+	"mov x6, %0\n"	\
+	:				\
+	: "r"(arg)	\
+	: "x6", "x7", "x8", "x9", "x13", "x14"	\
+);	\
+} while (0)
+
+#define flexos_morello_move_arg_int_into_reg(arg, number)	\
+	switch (number)	\
+	{	\
+	case 1:	\
+		__flexos_morello_move_argument1_int(arg);	\
+		break;	\
+	case 2:	\
+		__flexos_morello_move_argument2_int(arg);	\
+		break;	\
+	case 3:	\
+		__flexos_morello_move_argument3_int(arg);	\
+		break;	\
+	case 4:	\
+		__flexos_morello_move_argument4_int(arg);	\
+		break;	\
+	case 5:	\
+		__flexos_morello_move_argument5_int(arg);	\
+		break;	\
+	case 6:	\
+		__flexos_morello_move_argument6_int(arg);	\
+		break;	\
+	case 7:	\
+		__flexos_morello_move_argument7_int(arg);	\
+		break;	\
+	default:	\
+		break;	\
+	}	
+
+#define flexos_morello_move_arg_cap_into_reg(arg, number)	\
+	switch (number)	\
+	{	\
+	case 1:	\
+		__flexos_morello_move_argument1_cap(arg);	\
+		break;	\
+	case 2:	\
+		__flexos_morello_move_argument2_cap(arg);	\
+		break;	\
+	case 3:	\
+		__flexos_morello_move_argument3_cap(arg);	\
+		break;	\
+	case 4:	\
+		__flexos_morello_move_argument4_cap(arg);	\
+		break;	\
+	case 5:	\
+		__flexos_morello_move_argument5_cap(arg);	\
+		break;	\
+	case 6:	\
+		__flexos_morello_move_argument6_cap(arg);	\
+		break;	\
+	case 7:	\
+		__flexos_morello_move_argument7_cap(arg);	\
+		break;	\
+	default:	\
+		break;	\
+	}	
+
 #define __flexos_morello_gate1(key_from, key_to, f_ptr, arg1) 		\
 do {									\
 /* todo \
@@ -80,36 +278,35 @@ __asm__ volatile(	\
 /* Now we need to load the dest compartment id into a register and the number of arguments*/	\
 /* TODO: tying to load the address of tsb comp for the target may not work, may need to revist this in the future*/	\
 __asm__ volatile(	\
-	"mov x8, %0\n"	\
-	"mov x7, %1\n"	\
-	"mov x9, %2\n"	\
-	"mov x13, %3\n"	\
-	"mov x14, %4\n"	\
+	"mov x10, %0\n"	\
+	"mov x9, %1\n"	\
+	"mov x11, %2\n"	\
+	"mov x12, %3\n"	\
+	"mov x13, %4\n"	\
 	:				\
 	: "i"(key_to), "i"(1), "r"(f_ptr), "r"(tsb_comp ## key_to), "r"(uk_thread_get_tid())	\
-	: "x8", "x7", "x9", "x13", "x14"	\
+	: "x9", "x10", "x11", "x12", "x13"	\
 );	\
 	\
 	\
 	\
 /* Okay now we need to sort out the args, they need to go in c0-c7 */	\
 /* In this case we only have one argument so only need to use c0 */ 	\
-__asm__ volatile(	\
-	"mov x0, %0\n"	\
-	:				\
-	: "r"(arg1)	\
-	: "c0", "x7", "x8", "x9", "x13", "x14"	\
-); 	\
+	if (IS_CAP(arg1)) {	\
+		flexos_morello_move_arg_cap_into_reg(arg1, 1);	\
+	} else {	\
+		flexos_morello_move_arg_int_into_reg(arg1, 1);	\
+	}	\
 	\
 	\
 	\
 /* Load the switcher caps and branch to switcher using unsealing instruction ldpblr */	\
 __asm__ volatile(	\
-	"ldr c11, [%0]\n"	\
-	"ldpblr c29, [c11]\n" \
+	"ldr c14, [%0]\n"	\
+	"ldpblr c29, [c14]\n" \
 	:				\
 	: "r"((uintptr_t *)(&(switcher_call_comp ## key_from)))	\
-	: "c11", "c29", "c30", "x9", "x10", "x12", "x13", "x14", "x15", "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", "x31"	\
+	: "x11", "c29", "c30", "x9", "x8", "x7", "x6", "x5", "x4", "x3", "x2", "x1", "x0", "x10", "x12", "x13", "x14", "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", "x31"	\
 );	\
 \
 \

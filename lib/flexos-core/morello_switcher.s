@@ -1,12 +1,13 @@
 #include <flexos/impl/morello.h>
 
 /* 
-*   Arguments are expected in registers 0-6 allowing for 7 args
-*   Number of arguments should be passed in x7
-*   Target compartment ID should be in x8
-*   Pointer to target function needs to be in x9
-*   tsb_comp_to base addr should be in x13
-*   tid in x14
+*   Arguments are expected in registers 0-7 allowing for 8 args
+*   Indirect return pointer in x8
+*   Number of arguments should be passed in x9
+*   Target compartment ID should be in x10
+*   Pointer to target function needs to be in x11
+*   tsb_comp_to base addr should be in x12
+*   tid in x13
 *   DDC should be in c29
 */
 
@@ -23,25 +24,25 @@ switch_compartment:
     msr ddc, c29
 
 //  size of compartment caps struct
-    mov x10, #32
+    mov x14, #32
 
 //  get offset of correct compartment to switch to
-    mul x10, x10, x8
+    mul x14, x14, x10
 
 //  load the ddc for the new compartment
-    ldr c12, [x29, x10]
+    ldr c15, [x29, x14]
 
 //  load the pcc for the new compartment
-    add x10, x10, #16
-    ldr c11, [x29, x10]
+    add x14, x14, #16
+    ldr c16, [x29, x14]
 
 ////////////////////////////////////////////////
-// c12 = compartment ddc
-// c11 = compartment pcc
+// c15 = compartment ddc
+// c16 = compartment pcc
 ////////////////////////////////////////////////
 
 //  set new compartment ddc
-    msr ddc, c12
+    msr ddc, c15
 
     mov x17, sp
     cvt c18, c18, x17
@@ -50,26 +51,26 @@ switch_compartment:
     seal c18, c18, lpb
 
 //  size of tsb
-    mov x10, #16
+    mov x14, #16
 
 //  offset of tsb
-    mul x10, x10, x14
+    mul x14, x14, x13
 
 //  tsb base
-    add x13, x13, x10
+    add x12, x12, x14
 
 //  load sp
-    ldr x14, [x13]
+    ldr x14, [x12]
 
 //  load fp
-    ldr x15, [x13, #8]
+    ldr x15, [x12, #8]
 
 //  set new sp and fp
     mov sp, x14
     mov fp, x15
 
 //  branch, we don't want to return
-    br c11
+    br c16
     
 
 

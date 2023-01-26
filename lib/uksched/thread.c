@@ -58,6 +58,10 @@ static int uk_num_threads = 0;
 static int uk_num_threads = 0;
 #endif /* CONFIG_LIBFLEXOS_VMEPT */
 
+#if CONFIG_LIBFLEXOS_MORELLO
+static int uk_num_threads = 0;
+#endif /* CONFIG_LIBFLEXOS_MORELLO */
+
 /* Pushes the specified value onto the stack of the specified thread */
 static void stack_push(unsigned long *sp, unsigned long value)
 {
@@ -113,10 +117,10 @@ do {									\
 } while (0)
 #else /* CONFIG_LIBFLEXOS_GATE_INTELPKU_PRIVATE_STACKS */
 /* do nothing without PKU private stacks */
-#define SET_TSB(sp_comp, key)
+//#define SET_TSB(sp_comp, key)
 #endif /* CONFIG_LIBFLEXOS_GATE_INTELPKU_PRIVATE_STACKS */
 
-#if CONFIG_LIBFLEXOS_INTELPKU
+#if CONFIG_LIBFLEXOS_INTELPKU || CONFIG_LIBFLEXOS_MORELLO
 #define SET_TID_PAGE(stack_comp) 					\
 do {									\
 	*((unsigned long *) round_pgup((unsigned long)			\
@@ -167,7 +171,12 @@ int uk_thread_init_main(struct uk_thread *thread,
 	thread->tid = uk_num_threads++;
 	thread->ctrl = NULL;
 #endif /* CONFIG_LIBFLEXOS_VMEPT */
+#if CONFIG_LIBFLEXOS_MORELLO
+	thread->tid = uk_num_threads++;
+#endif
 	SETUP_STACK(stack, 0, function, arg, sp);
+
+	printf("Tid: %d\n", thread->tid);
 
 	/* The toolchain is going to insert a number of calls to
 	 * SETUP_STACK depending on the number of compartments, e.g.,

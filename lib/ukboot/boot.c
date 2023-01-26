@@ -103,7 +103,7 @@ struct thread_main_arg {
  *
  * for compartment 1.
  */
-extern char _comp1[], _ecomp1[], _bss_comp1[], _ebss_comp1[];
+extern char _comp1[], _ecomp1[], _bss_comp1[], _ebss_comp1[], _rodata[];
 extern char _data[], __bss_end[];
 extern char flexos_comp0_alloc[];
 extern char flexos_comp1_alloc[];
@@ -211,8 +211,12 @@ static void main_thread_func(void *arg)
 			uk_pr_info(", ");
 	}
 	uk_pr_info("])\n");
-
+#ifdef CONFIG_LIBFLEXOS_MORELLO
+	ret = 0;
+	morello_enter_main(main);
+#else
 	ret = main(tma->argc, tma->argv);
+#endif
 	uk_pr_info("main returned %d, halting system\n", ret);
 	ret = (ret != 0) ? UKPLAT_CRASH : UKPLAT_HALT;
 
@@ -473,7 +477,7 @@ do {									\
 	flexos_shared_alloc = a;
 	allocators[1] = uk_allocbbuddy_init(flexos_comp1_alloc, 1000 * __PAGE_SIZE);
 	init_compartments();
-	add_comp(_data, __bss_end);
+	add_comp(_rodata, __bss_end);
 	add_comp(_comp1, _ebss_comp1);
 
 #else
@@ -505,6 +509,7 @@ do {									\
 
 #if CONFIG_LIBUKSCHED
 	main_thread = uk_thread_create_main(main_thread_func, &tma);
+	test_things();
 	if (unlikely(!main_thread))
 		UK_CRASH("Could not create main thread\n");
 	uk_sched_start(s);

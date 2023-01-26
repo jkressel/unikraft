@@ -46,6 +46,7 @@
 
 #if CONFIG_LIBFLEXOS_MORELLO
 #include <flexos/impl/morello.h>
+#include <flexos/impl/morello-impl.h>
 #endif
 
 /* Enable/Disable VM/EPT support */

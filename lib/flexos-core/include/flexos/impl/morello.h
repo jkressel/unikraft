@@ -86,11 +86,17 @@ extern void *__capability switcher_call_comp1;
 #define	cheri_getaddress(x)	__builtin_cheri_address_get((x))
 #define	cheri_getpcc()		__builtin_cheri_program_counter_get()
 
+#define cheri_ptr(ptr, len)	\
+	cheri_setbounds(    \
+	    (__cheri_tocap __typeof__((ptr)[0]) *__capability)ptr, len)
+
 
 #define morello_create_capability_from_ptr(ptr, size, store_to_ptr)	\
 	__asm__ volatile(	\
 		"cvtp c0, %0\n"	\
 		"scbnds c0, c0, %2\n"	\
+		"mov x1, #(1<<1)\n"	\
+		"clrperm c0, c0, x1\n"	\
 		"str c0, [%1]\n"	\
 		:	\
 		: "r"((uintptr_t *)(ptr)), "r"((uintptr_t *)(store_to_ptr)), "r"(size)	\

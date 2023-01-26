@@ -43,6 +43,11 @@ CXXINCLUDES-$(CONFIG_LIBFLEXOS)	+= -I$(LIBFLEXOS_BASE)/include/
 ################################################################################
 LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_INTELPKU)	+= $(LIBFLEXOS_BASE)/intelpku.c
 LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_VMEPT)	+= $(LIBFLEXOS_BASE)/vmept.c
+LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_MORELLO)	+= $(LIBFLEXOS_BASE)/morello_switcher.s
+LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_MORELLO)	+= $(LIBFLEXOS_BASE)/morello_trampoline.s
+LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_MORELLO)	+= $(LIBFLEXOS_BASE)/morello.c
 # LIBFLEXOS_SRCS-$(CONFIG_LIBFLEXOS_VMEPT)	+= $(LIBFLEXOS_BASE)/wrappers.c
 
 LIBFLEXOS_CFLAGS-y	+= -fno-sanitize=kernel-address
+LIBFLEXOS_ASFLAGS += -g -target aarch64-none-elf -march=morello
+LIBFLEXOS_CFLAGS += -g -target aarch64-none-elf -march=morello

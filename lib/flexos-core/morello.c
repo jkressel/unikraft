@@ -37,6 +37,8 @@ extern char compartment_trampoline_end[];
 		"cvtp c0, %0\n"	\
 		"scbnds c0, c0, %2\n"	\
 		"scvalue c0, c0, %3\n"	\
+		"mov x1, #(1<<1) \n"	\
+		"clrperm c0, c0, x1\n"	\
 		"str c0, [%1]\n"	\
 		:	\
 		: "r"((uintptr_t *)(ptr)), "r"((uintptr_t *)(store_to_ptr)), "r"(size), "r"(compartment_trampoline)	\
@@ -109,6 +111,7 @@ void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 	//This is for the DDC
 	size_t comp_ddc_size = (uintptr_t) _end_addr - (uintptr_t) _start_addr;
 	morello_create_capability_from_ptr((uintptr_t *)(_start_addr), comp_ddc_size, ((uintptr_t *)(&(new_comp.ddc))));
+	printf("Start: 0x%x, End: 0x%x\n", _start_addr, _end_addr);
 
 	// Set up a capability pointing to the function we want to call within the
 	// compartment. This will be loaded as the PCC when the function is called.
@@ -120,7 +123,11 @@ void add_comp(uint64_t _start_addr, uint64_t _end_addr)
 }
 
 void test_things() {
-	//__flexos_morello_gate1(0,1,1,switcher_call_comp0);	
+	//__flexos_morello_gate1(0,1,1,switcher_call_comp0);
+	printf("tsb 1 thread 0, sp: 0x%x\n", tsb_comp1[0].sp);
+	printf("tsb 1 thread 1, sp: 0x%x\n", tsb_comp1[1].sp);	
+	printf("tsb 0 thread 0, sp: 0x%x\n", tsb_comp0[0].sp);
+	printf("tsb 0 thread 1, sp: 0x%x\n", tsb_comp0[1].sp);	
 
 }
 
@@ -140,10 +147,14 @@ void morello_enter_main(void (*_comp_fn)()) {
 		"mov c10, %1\n"
 		"ldr x11, =(cont)\n"
 		"scvalue c10, c10, x11\n"
+		"mov x11, #(1<<1)\n"
+		"clrperm c10, c10, x11\n"
 		"mov c11, %2\n"
-		"msr ddc, c11\n"
-		"br c10\n"
-		"cont: mov x9, %0\n"
+		"mov x9, sp\n"
+		"brr c10\n"
+		"cont: msr ddc, c11\n"
+		"mov sp, x9\n"
+		" mov x9, %0\n"
 		"blr x9\n"
 		:
 		: "r"(_comp_fn), "r"(compartments[0].pcc), "r"(compartments[0].ddc) 

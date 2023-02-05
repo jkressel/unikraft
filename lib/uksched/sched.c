@@ -255,13 +255,11 @@ void uk_sched_idle_init(struct uk_sched *sched,
 
 	UK_ASSERT(sched != NULL);
 
-	/* TODO Morello - you know the drill, replace this sucka */
-
 	ALLOC_COMP_STACK_MORELLO(stack, get_alloc(0));
 
 	// ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
 
-
+	/* __FLEXOS MARKER__: insert stack allocations here. */
 
 	void *stack_comp1 = NULL;
 ALLOC_COMP_STACK(stack_comp1, 1);
@@ -275,7 +273,7 @@ ALLOC_COMP_STACK(stack_comp1, 1);
 	/* same as main, we want to call the variant that doesn't execute gates */
 	rc = uk_thread_init_main(idle,
 			&sched->plat_ctx_cbs, sched->allocator,
-			"Idle", stack , stack_comp1
+			"Idle", stack /* __FLEXOS MARKER__: uk_thread_init call */
 ,
 			tls, function, NULL);
 
@@ -312,18 +310,17 @@ struct uk_thread *uk_sched_thread_create_main(struct uk_sched *sched,
 	}
 //////////////////// HERE TODO Morello
 	ALLOC_COMP_STACK_MORELLO(stack, get_alloc(0));
-	void *stack_comp1 = NULL;
-	ALLOC_COMP_STACK_MORELLO(stack_comp1, get_alloc(1));
 
 //ALLOC_COMP_STACK(stack_comp1, 1);
 
+	/* __FLEXOS MARKER__: insert stack allocations here. */
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init_main(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			"main", stack , stack_comp1
+			"main", stack /* __FLEXOS MARKER__: uk_thread_init call */
 ,
 			tls, function, arg);
 	if (rc)
@@ -369,18 +366,17 @@ struct uk_thread *uk_sched_thread_create(struct uk_sched *sched,
 		goto err;
 	}
 
-	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
+//	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
+	ALLOC_COMP_STACK_MORELLO(stack, get_alloc(0));
 
-	void *stack_comp1 = NULL;
-ALLOC_COMP_STACK(stack_comp1, 1);
-
+	/* __FLEXOS MARKER__: insert stack allocations here. */
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			name, stack , stack_comp1
+			name, stack /* __FLEXOS MARKER__: uk_thread_init call */
 ,
 			tls, function, arg);
 	if (rc)
@@ -446,16 +442,14 @@ struct uk_thread *uk_sched_thread_create_rpc_only(struct uk_sched *sched,
 
 	ALLOC_COMP_STACK(stack, COMP0_PKUKEY);
 
-	void *stack_comp1 = NULL;
-ALLOC_COMP_STACK(stack_comp1, 1);
-
+	/* __FLEXOS MARKER__: insert stack allocations here. */
 
 	if (have_tls_area() && !(tls = uk_thread_tls_create(flexos_shared_alloc)))
 		goto err;
 
 	rc = uk_thread_init(thread,
 			&sched->plat_ctx_cbs, sched->allocator,
-			name, stack , stack_comp1
+			name, stack /* __FLEXOS MARKER__: uk_thread_init call */
 ,
 			tls, function, arg);
 	if (rc)

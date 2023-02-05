@@ -153,7 +153,7 @@ do {									\
  */
 int uk_thread_init_main(struct uk_thread *thread,
 		struct ukplat_ctx_callbacks *cbs, struct uk_alloc *allocator,
-		const char *name, void *stack , void* stack_comp1
+		const char *name, void *stack /* __FLEXOS MARKER__: uk_thread_init decl */
 ,
 		void *tls, void (*function)(void *), void *arg)
 {
@@ -181,8 +181,7 @@ int uk_thread_init_main(struct uk_thread *thread,
 	/* The toolchain is going to insert a number of calls to
 	 * SETUP_STACK depending on the number of compartments, e.g.,
 	 * SETUP_STACK(stack_comp1, 1, NULL, NULL); */
-	unsigned long sp1;
-SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
+	/* __FLEXOS MARKER__: insert stack installations here. */
 
 
 	/* Call platform specific setup. */
@@ -206,7 +205,8 @@ SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
 
 	// FIXME
 	//thread->reent = flexos_malloc_whitelist(sizeof(struct _reent), libc);
-	thread->reent = malloc(sizeof(struct _reent));
+	//thread->reent = malloc(sizeof(struct _reent));
+	thread->reent = uk_malloc(flexos_shared_alloc,sizeof(struct _reent));
 	if (!thread->reent) {
 		flexos_nop_gate(0, 0, uk_pr_crit,
 				FLEXOS_SHARED_LITERAL("Could not allocate reent!"));
@@ -231,7 +231,7 @@ SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
 
 int uk_thread_init(struct uk_thread *thread,
 		struct ukplat_ctx_callbacks *cbs, struct uk_alloc *allocator,
-		const char *name, void *stack , void* stack_comp1
+		const char *name, void *stack /* __FLEXOS MARKER__: uk_thread_init decl */
 ,
 		void *tls, void (*function)(void *), void *arg)
 {
@@ -260,8 +260,7 @@ int uk_thread_init(struct uk_thread *thread,
 	/* The toolchain is going to insert a number of calls to
 	 * SETUP_STACK depending on the number of compartments, e.g.,
 	 * SETUP_STACK(stack_comp1, 1, NULL, NULL); */
-	unsigned long sp1;
-SETUP_STACK(stack_comp1, 1, NULL, NULL, sp1);
+	/* __FLEXOS MARKER__: insert stack installations here. */
 
 
 	/* Call platform specific setup. */

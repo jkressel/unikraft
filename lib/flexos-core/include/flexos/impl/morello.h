@@ -33,9 +33,10 @@ struct morello_compartment_switcher_caps {
 extern struct morello_compartment_switcher_caps switcher_capabilities;
 
 
-//TODO Morello Replace
+
 extern struct uk_thread_status_block tsb_comp0[32];
-extern struct uk_thread_status_block tsb_comp1[32];
+
+/* __FLEXOS MARKER__: insert tsb extern decls here. */
 
 
 struct comp

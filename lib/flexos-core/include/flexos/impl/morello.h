@@ -6,7 +6,7 @@
 struct uk_alloc;
 
 // TODO Morello Replace
-#define NUMBER_OF_COMPARTMENTS 2
+/* __FLEXOS MARKER__: insert morello comp count here. */
 
 /* Dynamic allocator for compartment 1 */
 

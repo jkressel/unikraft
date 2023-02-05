@@ -68,7 +68,7 @@ struct uk_thread {
 	struct uk_waitq waiting_threads;
 	struct uk_sched *sched;
 	void *prv;
-#if CONFIG_LIBFLEXOS_INTELPKU
+#if CONFIG_LIBFLEXOS_INTELPKU || CONFIG_LIBFLEXOS_MORELLO
 	int tid;
 #endif /* CONFIG_LIBFLEXOS_INTELPKU */
 #if CONFIG_LIBFLEXOS_VMEPT
@@ -158,7 +158,7 @@ struct uk_thread *uk_thread_current(void)
 	return *current;
 }
 
-__attribute__((libuksignal_callback)) static inline
+static inline
 struct uk_thread_sig *uk_crr_thread_sig_container(void)
 {
 	return uk_thread_current()->signals_container;

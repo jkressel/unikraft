@@ -50,7 +50,8 @@ extern struct comp compartments[NUMBER_OF_COMPARTMENTS];
 
 //TODO Morello replace
 extern void *__capability switcher_call_comp0;
-extern void *__capability switcher_call_comp1;
+
+/* __FLEXOS MARKER__: insert switcher call decls here. */
 
 
 /*

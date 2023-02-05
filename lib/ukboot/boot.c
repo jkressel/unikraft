@@ -103,7 +103,7 @@ struct thread_main_arg {
  *
  * for compartment 1.
  */
-extern char _data[], _rodata[];
+extern char __bss_end[], _rodata[];
 /* __FLEXOS MARKER__: insert morello compartment section decls here. */
 extern char flexos_comp0_alloc[];
 /* __FLEXOS MARKER__: insert morello compartment alloc decls here. */

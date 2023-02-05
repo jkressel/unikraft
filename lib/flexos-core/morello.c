@@ -22,7 +22,7 @@ struct uk_thread_status_block tsb_comp0[32] __attribute__((used));
  * for compartment 1.
  */
 
-struct uk_thread_status_block tsb_comp1[32]  __attribute__((section(".data_comp1"))) __attribute__((used));
+/* __FLEXOS MARKER__: insert tsb decls here. */
 
 
 extern char switch_compartment[];
@@ -49,7 +49,8 @@ struct morello_compartment_switcher_caps switcher_capabilities;
 
 //TODO Morello replace
 void *__capability switcher_call_comp0;
-void *__capability switcher_call_comp1 __attribute__((section(".data_comp1")));
+
+/* __FLEXOS MARKER__: insert switcher calls here. */
 
 uint64_t compartment_id = 0;
 
@@ -78,13 +79,12 @@ void init_compartments()
 
 	assert((uintptr_t)(&switcher_call_comp0) % 16 == 0);
 
-	//TODO Morello replace
 	morello_create_capability_from_ptr((uintptr_t *)(&(switcher_capabilities)), sizeof(switcher_capabilities), ((uintptr_t *)(&(switcher_call_comp0))));
-	morello_create_capability_from_ptr((uintptr_t *)(&(switcher_capabilities)), sizeof(switcher_capabilities), ((uintptr_t *)(&(switcher_call_comp1))));
+	/* __FLEXOS MARKER__: insert create switcher calls here. */
 
 	//Seal this capability to be only used via a `lpb` type call
 	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp0) :);
-	asm("seal %w0, %w0, lpb" : "+r"(switcher_call_comp1) :);
+	/* __FLEXOS MARKER__: insert seal switcher calls here. */
 
 	printf("got to end of init comps\n");
 

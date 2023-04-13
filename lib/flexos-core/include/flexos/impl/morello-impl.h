@@ -686,7 +686,11 @@ __asm__ volatile (	\
 	"mov x13, %0\n"	\
 	\
 	\
+<<<<<<< HEAD
 	"mov c0, %7\n"	\
+=======
+	"mov x0, %7\n"	\
+>>>>>>> 84e64b7032ce4d5b68a4a9a4aa55225a94aa971d
 	\
 	\
 	\
@@ -703,6 +707,7 @@ __asm__ volatile (	\
 \
 \
 __asm__ (	\
+<<<<<<< HEAD
 	"msr ddc, c29\n"\
 	:\
 	:\
@@ -710,6 +715,16 @@ __asm__ (	\
 );\
 __asm__ volatile(	\
 	"mov x10, %0\n"\
+=======
+	"nop\n"\
+	:\
+	:\
+	:"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", "x30"\
+);\
+__asm__ volatile(	\
+	"mov x10, %0\n"\
+	"msr ddc, c29\n"	\
+>>>>>>> 84e64b7032ce4d5b68a4a9a4aa55225a94aa971d
 	\
 	\
 	\
@@ -2941,6 +2956,7 @@ do {									\
 } while (0)
 
 
+<<<<<<< HEAD
 #define MORELLO_LOAD_SHARED_DATA(ptr_to_load, var_to_put_it_in) \
 do { \
 	__asm__ (\
@@ -2953,6 +2969,8 @@ do { \
 	: "memory"\
 	);\
 } while (0)
+=======
+>>>>>>> 84e64b7032ce4d5b68a4a9a4aa55225a94aa971d
 
 
 #endif

@@ -9,6 +9,9 @@ str c18, [sp, #-16]!
 blr x11
 //need to handle return values
 ldr c18, [sp], #16
+ldr x11, [c18]
+mov sp, x11
+add c18, c18, #8
 ldpbr c29, [c18]
 
 .global compartment_trampoline_end

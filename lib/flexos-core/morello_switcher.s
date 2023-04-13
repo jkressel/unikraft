@@ -19,6 +19,9 @@ switch_compartment:
 //  Put DDC into the DDC register
     mrs c18, ddc
     stp c18, clr, [sp, #-32]!
+    mov x17, sp
+    add x17, x17, #32
+    str x17, [sp, #-8]!
 
 
     msr ddc, c29
@@ -46,9 +49,9 @@ switch_compartment:
 
     mov x17, sp
     cvt c18, c18, x17
-    scbnds c18, c18, #32
+    scbnds c18, c18, #40
     scvalue c18, c18, x17
-    seal c18, c18, lpb
+//    seal c18, c18, lpb
 
 //  size of tsb
     mov x14, #16
